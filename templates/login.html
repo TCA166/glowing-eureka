@@ -3,7 +3,7 @@
     <body>
         <main>
             <div class="card card-body">
-                <form onsubmit="handleLogin('{{url_for("glowing-eureka.loginValidate")}}')">
+                <form onsubmit="handleLogin(event)">
                     <div class="mb-3">
                       <label for="usernameInput" class="form-label">Username</label>
                       <input type="text" class="form-control" id="usernameInput">

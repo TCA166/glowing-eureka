@@ -3,13 +3,21 @@ import db
 
 bp = Blueprint("glowing-eureka", __name__)
 
+def getAuthFromRequest() -> int:
+    if "auth" not in request.cookies:
+        return 0
+    lvl = db.validateToken(request.cookies["auth"])
+    if lvl == None:
+        return 0
+    return lvl
+
 @bp.route("/")
 @bp.route("/products/", methods=["GET"])
 def products():
     with db.Session(db.engine) as session:
         stmt = db.select(db.product).where(db.product.isDeleted != True)
         query = [r for r in session.scalars(stmt) if not r.isDeleted]
-    return render_template("products.html", products=query)
+    return render_template("products.html", products=query, auth=getAuthFromRequest())
 
 @bp.route("/products/<id>", methods=["GET"])
 def singleProduct(id:int):
@@ -17,11 +25,16 @@ def singleProduct(id:int):
     with db.Session(db.engine) as session:
         stmt = db.select(db.product).where(db.product.id == id)
         product = [r for r in session.scalars(stmt)][0]
-    return render_template("product.html", product=product)
+    return render_template("product.html", product=product, auth=getAuthFromRequest())
 
 @bp.route("/login", methods=["GET"])
 def login():
     return render_template("login.html")
+
+@bp.route("/logout", methods=["GET", "POST"])
+def logout():
+    request.cookies.pop("auth")
+    
 
 @bp.route("/login", methods=["POST"])
 def loginValidate():

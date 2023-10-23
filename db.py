@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Date, create_engine, select, TIMESTAMP
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Date, create_engine, select, TIMESTAMP, delete
 from sqlalchemy.orm import relationship, backref, declarative_base, Session
 import hashlib, uuid
 from datetime import datetime
@@ -45,7 +45,7 @@ class user(Base):
         super().__init__(username=username, auth=auth, salt=salt, hash=hashlib.sha512((password + salt).encode("utf-8")).hexdigest())
 
 class token(Base):
-    __tablename__ = "tokens"
+    __tablename__ = "token"
     id = Column(Integer, primary_key=True)
     token = Column(String, nullable=False)
     level = Column(Integer, nullable=False)
@@ -53,9 +53,9 @@ class token(Base):
     valid = Column(Integer)
     def __init__(self, level:int, valid:int | None) -> None:
         token = uuid.uuid4().hex
-        super().__init__(token=token, level=level, created=datetime.now().timestamp(), valid=valid)
+        super().__init__(token=token, level=level, created=datetime.now(), valid=valid)
 
-def logIn(username:str, password:str) -> int:
+def logIn(username:str, password:str) -> int | None:
     """Returns the user's auth level if the credentials are valid, and None if they are not"""
     with Session(engine) as session:
         stmt = select(user).where(user.username == username)
@@ -68,6 +68,20 @@ def logIn(username:str, password:str) -> int:
             return u.auth
         else:
             return None
+
+def validateToken(auth:str) -> int | None:
+    """Return's the token's auth level if the token is valid"""
+    with Session(engine) as session:
+        stmt = select(token).where(token.token == auth)
+        query = [r for r in session.scalars(stmt)]
+        if len(query) == 0:
+            return None
+        t = query[0]
+        if t.created.timestamp() + t.valid < datetime.now().timestamp():
+            delete(token).where(token.id == t.id)
+            session.commit()
+            return None
+        return t.level
 
 if __name__ == "__main__":
     with Session(engine) as session:
