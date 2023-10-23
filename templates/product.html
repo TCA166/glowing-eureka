@@ -1,0 +1,24 @@
+<html>
+    {%include "head.html"%}
+    <body>
+        {%include "navbar.html"%}
+        <main>
+            <div class="card">
+                {%if product.imageURL != None %}
+                <img src="{{product.imageURL}}" class="card-img-top" alt="...">
+                {%endif%}
+                <div class="card-body">
+                    <h3 class="card-title">{{product.title}}</h5>
+                    {%if product.description != None%}
+                    <p class="card-text">{{product.description}}</p>
+                    {%endif%}
+                    <div class="card">
+                        <div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>

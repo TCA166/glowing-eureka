@@ -1,0 +1,21 @@
+<html>
+    {%include "head.html"%}
+    <body>
+        <main>
+            <div class="card card-body">
+                <form onsubmit="handleLogin('{{url_for("glowing-eureka.loginValidate")}}')">
+                    <div class="mb-3">
+                      <label for="usernameInput" class="form-label">Username</label>
+                      <input type="text" class="form-control" id="usernameInput">
+                    </div>
+                    <div class="mb-3">
+                      <label for="passwordInput" class="form-label">Password</label>
+                      <input type="password" class="form-control" id="passwordInput">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </main>
+    </body>
+    <script src="{{url_for('static', filename='login.js')}}"></script>
+</html>

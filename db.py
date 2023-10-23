@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Date, create_engine, select
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Date, create_engine, select, TIMESTAMP
 from sqlalchemy.orm import relationship, backref, declarative_base, Session
 import hashlib, uuid
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -13,7 +14,7 @@ class product(Base):
     title = Column(String, nullable=False)
     description = Column(String)
     isDeleted = Column(Boolean, nullable=False)
-    creationDate = Column(Date, default="now")
+    creationDate = Column(Date, default="CURRENT_DATE")
     imageURL = Column(String)
     categoryId = Column(Integer, ForeignKey("category.id"))
     comments = relationship("comment", backref=backref("comment"))
@@ -42,6 +43,17 @@ class user(Base):
     def __init__(self, username:str, password:str, auth:int) -> None:
         salt = uuid.uuid4().hex
         super().__init__(username=username, auth=auth, salt=salt, hash=hashlib.sha512((password + salt).encode("utf-8")).hexdigest())
+
+class token(Base):
+    __tablename__ = "tokens"
+    id = Column(Integer, primary_key=True)
+    token = Column(String, nullable=False)
+    level = Column(Integer, nullable=False)
+    created = Column(TIMESTAMP, nullable=False)
+    valid = Column(Integer)
+    def __init__(self, level:int, valid:int | None) -> None:
+        token = uuid.uuid4().hex
+        super().__init__(token=token, level=level, created=datetime.now().timestamp(), valid=valid)
 
 def logIn(username:str, password:str) -> int:
     """Returns the user's auth level if the credentials are valid, and None if they are not"""
