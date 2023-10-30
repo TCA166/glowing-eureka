@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Date, create_engine, select, TIMESTAMP, delete
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Date, create_engine, select, TIMESTAMP, delete, exists
 from sqlalchemy.orm import relationship, backref, declarative_base, Session
 import hashlib, uuid
 from datetime import datetime
@@ -6,6 +6,17 @@ from datetime import datetime
 Base = declarative_base()
 
 engine = create_engine("sqlite:///main.db")
+
+class comment(Base):
+    __tablename__ = "comment"
+    id = Column(Integer, primary_key=True)
+    productId = Column(Integer, ForeignKey("product.id"), nullable=False)
+    description = Column(String)
+    isDeleted = Column(Boolean, nullable=False)
+    creationDate = Column(Date, nullable=False)
+    userId = Column(Integer, ForeignKey("user.id"), nullable=False)
+    def __init__(self, productId:int, description:str):
+        super().__init__(productId=productId, description=description, isDeleted=False, creationDate=datetime.now())
 
 class product(Base):
     """A product stored in the database, that has a title, decription, image, can have comments attached to and belongs to a category"""
@@ -18,14 +29,6 @@ class product(Base):
     imageURL = Column(String)
     categoryId = Column(Integer, ForeignKey("category.id"))
     comments = relationship("comment", backref=backref("comment"))
-
-class comment(Base):
-    __tablename__ = "comment"
-    id = Column(Integer, primary_key=True)
-    productId = Column(Integer, ForeignKey("product.id"), nullable=False)
-    description = Column(String)
-    isDeleted = Column(Boolean, nullable=False)
-    creationDate = Column(Date, nullable=False)
 
 class category(Base):
     __tablename__ = "category"
@@ -40,6 +43,8 @@ class user(Base):
     auth = Column(Integer, nullable=False)
     salt = Column(String, nullable=False)
     hash = Column(String, nullable=False)
+    tokens = relationship("token", backref=backref("token"))
+    comments = relationship("comment", foreign_keys=[comment.userId])
     def __init__(self, username:str, password:str, auth:int) -> None:
         salt = uuid.uuid4().hex
         super().__init__(username=username, auth=auth, salt=salt, hash=hashlib.sha512((password + salt).encode("utf-8")).hexdigest())
@@ -47,7 +52,8 @@ class user(Base):
 class token(Base):
     __tablename__ = "token"
     id = Column(Integer, primary_key=True)
-    token = Column(String, nullable=False)
+    userId = Column(Integer, ForeignKey("user.id"))
+    hash = Column(String, nullable=False)
     level = Column(Integer, nullable=False)
     created = Column(TIMESTAMP, nullable=False)
     valid = Column(Integer)
@@ -72,16 +78,31 @@ def logIn(username:str, password:str) -> int | None:
 def validateToken(auth:str) -> int | None:
     """Return's the token's auth level if the token is valid"""
     with Session(engine) as session:
-        stmt = select(token).where(token.token == auth)
+        stmt = select(token).where(token.hash == auth)
         query = [r for r in session.scalars(stmt)]
         if len(query) == 0:
             return None
         t = query[0]
         if t.created.timestamp() + t.valid < datetime.now().timestamp():
-            delete(token).where(token.id == t.id)
+            stmt = delete(token).where(token.id == t.id)
+            session.execute(stmt)
             session.commit()
             return None
         return t.level
+
+def getUserFromAuth(auth:str) -> user | None:
+    """Return the asociated user id from the provided token"""
+    with Session(engine) as session:
+        stmt = select(token).where(token.hash == auth)
+        quert = (r for r in session.scalars(stmt))
+        if len(quert) < 1:
+            return None
+        tok = quert[0]
+        stmt = select(user).where(user.id == tok.userId)
+        users = (r for r in session.scalars(stmt))
+        if len(users) < 1:
+            raise None
+        return users[0]
 
 if __name__ == "__main__":
     with Session(engine) as session:
