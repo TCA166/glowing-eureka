@@ -18,19 +18,22 @@
                         </div>
                         <ul class="list-group list-group-flush">
                             {%for comment in comments%}
+                                {%if not comment.isDeleted%}
                                 <li class="list-group-item">
                                     <span>{{comment.description}} | {{comment.creationDate}}</span>
                                     {%if user != None%}
                                         {%if comment.userId == user.id%}
-                                        <form action="{{url_for(request.endpoint, id=product.id)}}/comment" method="DELETE">
+                                        <form action="{{url_for('glowing-eureka.deleteComment', id=product.id)}}" method="POST" style="display: inline-block;">
                                             <input type="hidden" value="{{comment.id}}" name="commentId">
                                             <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
                                         </form>
+                                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="editBox(this)"><i class="bi bi-pencil-square"></i></button>
                                         {%endif%}
                                     {%endif%}
                                 </li>
+                                {%endif%}
                             {%endfor%}
-                            {%if auth > 0%}
+                            {%if auth != None%}
                             <li class="list-group-item">
                                 <form action="{{url_for(request.endpoint, id=product.id)}}/comment", method="POST">
                                     <input type="text" class="form-control" name="commentInput" placeholder="Your comment here...">

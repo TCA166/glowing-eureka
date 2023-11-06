@@ -3,13 +3,11 @@ import db
 
 bp = Blueprint("glowing-eureka", __name__)
 
-def getAuthFromRequest() -> int:
+def getAuthFromRequest() -> db.token | None:
     if "auth" not in request.cookies:
         return 0
-    lvl = db.validateToken(request.cookies["auth"])
-    if lvl == None:
-        return 0
-    return lvl
+    tok = db.validateToken(request.cookies["auth"])
+    return tok
 
 def getUserFromRequest() -> db.user | None:
     if "auth" not in request.cookies:
@@ -20,6 +18,9 @@ def getUserFromRequest() -> db.user | None:
     return usr
 
 @bp.route("/")
+def home():
+    return redirect(url_for("glowing-eureka.products"))
+
 @bp.route("/products/", methods=["GET"])
 def products():
     with db.Session(db.engine) as session:
@@ -27,7 +28,6 @@ def products():
         query = [r for r in session.scalars(stmt) if not r.isDeleted]
     return render_template("products.html", products=query, auth=getAuthFromRequest())
 
-@bp.route("/<id>", methods=["GET"])
 @bp.route("/products/<id>", methods=["GET"])
 def singleProduct(id:int):
     id = int(id)
@@ -36,14 +36,12 @@ def singleProduct(id:int):
         product = [r for r in session.scalars(stmt)][0]
         stmt = db.select(db.comment).where(db.comment.productId == product.id)
         comments = [r for r in session.scalars(stmt)]
-    auth = getAuthFromRequest()
-    usr = getUserFromRequest()
-    return render_template("product.html", product=product, comments=comments, auth=auth, user=usr)
+    return render_template("product.html", product=product, comments=comments, auth=getAuthFromRequest(), user=getUserFromRequest())
 
-@bp.route("/<id>/comment", methods=["POST"])
 @bp.route("/products/<id>/comment", methods=["POST"])
 def addComment(id:int):
-    if getAuthFromRequest() == 0:
+    tok = getAuthFromRequest()
+    if tok is None:
         abort(401)
     id = int(id)
     text = request.form["commentInput"]
@@ -52,21 +50,29 @@ def addComment(id:int):
         b = session.scalars(check).fetchall()
         if not b:
             abort(400)
-        comment = db.comment(id, text)
-        session.add(comment)
+        if "commentId" in request.form.keys():
+            existing = session.query(db.comment).where(db.comment.id == request.form["commentId"]).first()
+            existing.description = text
+        else:
+            comment = db.comment(id, text, tok.user)
+            session.add(comment)
         session.commit()
     return redirect(url_for("glowing-eureka.singleProduct", id=id))
 
-@bp.route("/<id>/comment", methods=["DELETE"])
-@bp.route("/products/<id>/comment", methods=["DELETE"])
+@bp.route("/products/<id>/comment/delete", methods=["POST"])
 def deleteComment(id:int):
     id = int(id)
-    if getAuthFromRequest() == 0:
+    if getAuthFromRequest() is None:
         abort(401)
     usr = getUserFromRequest()
-    comment = request.form["commentId"]
+    commentId = request.form["commentId"]
     with db.Session(db.engine) as session:
-        pass
+        comment = session.query(db.comment).where(db.comment.id == commentId).first()
+        if comment.userId != usr.id:
+            abort(401)
+        comment.isDeleted = True
+        session.commit()
+    return redirect(url_for("glowing-eureka.singleProduct", id=id))
 
 @bp.route("/login", methods=["GET"])
 def login():
@@ -91,7 +97,8 @@ def loginValidate():
     if level == None:
         abort(401)
     with db.Session(db.engine) as session:
-        token = db.token(level, 86400)
+        user = session.query(db.user).where(db.user.username == j["username"]).first()
+        token = db.token(level, 86400, user)
         session.add(token)
         session.commit()
         return jsonify(token.hash)

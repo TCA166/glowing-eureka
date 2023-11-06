@@ -16,7 +16,7 @@
                     <a class="nav-link disabled" aria-disabled="true">Disabled</a>
                 </li>
             </ul>
-            {%if auth < 1%}
+            {%if auth == None%}
             <a href="{{url_for('glowing-eureka.login')}}" class="btn btn-outline-success" type="submit">Log in</a>
             {%else%}
             <a href="{{url_for('glowing-eureka.logout')}}" class="btn btn-outline-success" type="submit">Log out</a>
