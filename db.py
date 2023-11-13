@@ -1,8 +1,8 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Date, create_engine, select, TIMESTAMP, delete, exists
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Date, create_engine, select, TIMESTAMP, delete, Table
 from sqlalchemy.orm import relationship, backref, declarative_base, Session, joinedload
 import hashlib, uuid
 from datetime import datetime
-
+from sqlalchemy.orm import Mapped
 Base = declarative_base()
 
 engine = create_engine("sqlite:///main.db")
@@ -18,6 +18,8 @@ class comment(Base):
     def __init__(self, productId:int, description:str, user:'user'):
         super().__init__(productId=productId, description=description, isDeleted=False, creationDate=datetime.now(), user=user)
 
+product_category = Table("product_category", Base.metadata, Column("productId", ForeignKey("product.id"), primary_key=True), Column("categoryId", ForeignKey("category.id"), primary_key=True))
+
 class product(Base):
     """A product stored in the database, that has a title, decription, image, can have comments attached to and belongs to a category"""
     __tablename__ = "product"
@@ -27,14 +29,20 @@ class product(Base):
     isDeleted = Column(Boolean, nullable=False)
     creationDate = Column(Date, default="CURRENT_DATE")
     imageURL = Column(String)
-    categoryId = Column(Integer, ForeignKey("category.id"))
+    categories: Mapped[list['category']] = relationship(
+        secondary=product_category, back_populates="products"
+    )
     comments = relationship("comment", backref=backref("product"))
+    def __init__(self, title:str, description:str, url:str, categoryId:int=None) -> None:
+        super().__init__(title=title, description=description, creationDate=datetime.now(), imageURL=url, category=categoryId)
 
 class category(Base):
     __tablename__ = "category"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    products = relationship("product", backref=backref("product"))
+    products: Mapped[list[product]] = relationship(
+        secondary=product_category, back_populates="categories"
+    )
 
 class user(Base):
     __tablename__ = "user"
@@ -65,7 +73,7 @@ def logIn(username:str, password:str) -> int | None:
     """Returns the user's auth level if the credentials are valid, and None if they are not"""
     with Session(engine) as session:
         stmt = select(user).where(user.username == username)
-        query = [r for r in session.scalars(stmt)]
+        query = [r for r in session.scalars(stmt).unique()]
         if len(query) == 0:
             return None
         u = query[0]

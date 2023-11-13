@@ -16,6 +16,14 @@
                         {%endif%}
                     </div>
                 </div>
+                <div>
+                    {%if page > 0%}
+                    <a href=".&page={{page - 1}}/" class="btn"><i class="bi bi-arrow-bar-left"></i></a>    
+                    {%endif%}
+                    {%if next%}
+                    <a href=".&page={{page + 1}}" class="btn"><i class="bi bi-arrow-bar-right"></i></a>            
+                    {%endif%}
+                </div>
             </div>            
             {%endfor%}
         </main>

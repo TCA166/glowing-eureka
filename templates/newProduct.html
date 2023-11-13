@@ -1,0 +1,19 @@
+<html>
+    {%include "head.html"%}
+    <body>
+        {%include "navbar.html"%}
+        <main>
+            <form class="card" action="{{url_for('glowing-eureka.newProduct')}}" method="post">
+                <div class="card-body">
+                    <input type="text" class="form-control form-control-lg" placeholder="Product name" name="productName">
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Product description</label>
+                        <textarea class="form-control" name="productDescription"></textarea>
+                    </div>
+                    <input type="text" class="form-control" placeholder="Image url" name="productImageUrl">
+                </div>
+                <input type="submit" class="btn btn-primary">
+            </form>
+        </main>
+    </body>
+</html>

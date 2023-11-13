@@ -13,5 +13,4 @@ function handleLogin(e){
     xhttp.open("POST", "./login", true);
     xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhttp.send(JSON.stringify({"username":username, "password":password}));
-    
 }

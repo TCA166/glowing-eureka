@@ -5,7 +5,7 @@ bp = Blueprint("glowing-eureka", __name__)
 
 def getAuthFromRequest() -> db.token | None:
     if "auth" not in request.cookies:
-        return 0
+        return None
     tok = db.validateToken(request.cookies["auth"])
     return tok
 
@@ -23,10 +23,31 @@ def home():
 
 @bp.route("/products/", methods=["GET"])
 def products():
+    if "page" not in request.args:
+        page = 0
+    else:
+        page = int(request.args["page"])
     with db.Session(db.engine) as session:
         stmt = db.select(db.product).where(db.product.isDeleted != True)
-        query = [r for r in session.scalars(stmt) if not r.isDeleted]
-    return render_template("products.html", products=query, auth=getAuthFromRequest())
+        query = session.scalars(stmt).fetchall()
+    if len(query) > (page + 1) * 10:
+        abort(400)
+    return render_template("products.html", products=query[page * 10:(page + 1) * 10], auth=getAuthFromRequest(), page=page, next=len(query) > (page + 1) * 10)
+
+@bp.route("/products/new", methods=["GET", "POST"])
+def newProduct():
+    tok = getAuthFromRequest()
+    if tok is None:
+        abort(401)
+    if tok.level < 1:
+        abort(403)
+    if request.method == "GET":
+        return render_template("newProduct.html", auth=getAuthFromRequest())
+    else:
+        with db.Session(db.engine) as session:
+            db.product(request.form["productName"], request.form["productDescription"], request.form["productImageUrl"])
+            session.commit()
+        return redirect(url_for("glowing-eureka.products"))
 
 @bp.route("/products/<id>", methods=["GET"])
 def singleProduct(id:int):
@@ -71,6 +92,21 @@ def deleteComment(id:int):
         if comment.userId != usr.id:
             abort(401)
         comment.isDeleted = True
+        session.commit()
+    return redirect(url_for("glowing-eureka.singleProduct", id=id))
+
+@bp.route("/products/<id>/comment/edit", methods=["POST"])
+def editComment(id:int):
+    id = int(id)
+    if getAuthFromRequest() is None:
+        abort(401)
+    usr = getUserFromRequest()
+    data = request.json
+    with db.Session(db.engine) as session:
+        comment = session.query(db.comment).where(db.comment.id == data["commentId"]).first()
+        if comment.userId != usr.id:
+            abort(401)
+        comment.description = data["description"]
         session.commit()
     return redirect(url_for("glowing-eureka.singleProduct", id=id))
 
