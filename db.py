@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Date, create_engine, select, TIMESTAMP, delete, Table
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Date, create_engine, select, TIMESTAMP, delete, Table, exists
 from sqlalchemy.orm import relationship, backref, declarative_base, Session, joinedload
 import hashlib, uuid
 from datetime import datetime
@@ -33,8 +33,11 @@ class product(Base):
         secondary=product_category, back_populates="products"
     )
     comments = relationship("comment", backref=backref("product"))
-    def __init__(self, title:str, description:str, url:str, categoryId:int=None) -> None:
-        super().__init__(title=title, description=description, creationDate=datetime.now(), imageURL=url, category=categoryId)
+    def __init__(self, title:str, description:str, url:str, categories:list['category']=None) -> None:
+        kwargs = {"title":title, "description":description, "creationDate":datetime.now(), "imageURL":url, "isDeleted":False}
+        if isinstance(categories, list):
+            kwargs["categories"] = categories
+        super().__init__(**kwargs)
 
 class category(Base):
     __tablename__ = "category"

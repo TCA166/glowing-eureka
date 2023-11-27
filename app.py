@@ -45,7 +45,8 @@ def newProduct():
         return render_template("newProduct.html", auth=getAuthFromRequest())
     else:
         with db.Session(db.engine) as session:
-            db.product(request.form["productName"], request.form["productDescription"], request.form["productImageUrl"])
+            product = db.product(request.form["productName"], request.form["productDescription"], request.form["productImageUrl"])
+            session.add(product)
             session.commit()
         return redirect(url_for("glowing-eureka.products"))
 
