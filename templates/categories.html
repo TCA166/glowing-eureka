@@ -18,6 +18,14 @@
                         <td>{{cat.name}}</td>
                         <td>
                             <a href="{{url_for('glowing-eureka.products', category=cat.id, search=phrase)}}" class="btn btn-outline-primary btn-sm">View</a>
+                            {%if auth != None%}
+                            {%if auth.level >= 1%}
+                                <a href="{{url_for('glowing-eureka.editCategory', id=cat.id)}}" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil-square"></i></a>
+                                <form action="{{url_for('glowing-eureka.deleteCategory', id=cat.id)}}" method="POST" style="display: inline-block;">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+                                </form>
+                            {%endif%}
+                            {%endif%}
                         </td>
                     </tr>
                     {%endfor%}

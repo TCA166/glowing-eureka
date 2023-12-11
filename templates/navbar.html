@@ -20,8 +20,11 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="nav-link" href="{{url_for('glowing-eureka.newProduct')}}">New Product</a></li>
+                            <li><a class="nav-link" href="{{url_for('glowing-eureka.newCategory')}}">New Category</a></li>
+                            {%if auth.level >= 2%}
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="nav-link" href="{{url_for('glowing-eureka.users')}}">Users</a></li>
+                            {%endif%}
                         </ul>
                     </li>              
                     {%endif%}

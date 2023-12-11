@@ -1,0 +1,23 @@
+<html>
+    {%include "head.html"%}
+    <body>
+        {%include "navbar.html"%}
+        <main>
+            <form class="card" action="{{url_for('glowing-eureka.newCategory')}}" method="post">
+                <input type="hidden" value="{{id}}" name="categoryId">
+                <div class="card-body">
+                    <input type="text" class="form-control form-control-lg mb-3" placeholder="Category name" name="categoryName" value="{{name}}">
+                    <ul class="list-group">
+                        {%for product in products%}
+                        <li class="list-group-item">
+                            <input class="form-check-input me-1" type="checkbox" value="" name="{{product.id}}" {{"checked" if product.id in on}}>
+                            <label class="form-check-label">{{product.title}}</label>
+                        </li>
+                        {%endfor%}
+                    </ul>
+                </div>
+                <input type="submit" class="btn btn-primary">
+            </form>
+        </main>
+    </body>
+</html>

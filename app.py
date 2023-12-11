@@ -172,10 +172,60 @@ def categories():
         query = session.scalars(stmt).fetchall()
     return render_template("categories.html", categories=query, auth=getAuthFromRequest())
 
+@bp.route("/categories/new", methods=["GET", "POST"])
+def newCategory():
+    auth = getAuthFromRequest()
+    if auth is None or auth.level < 1:
+        abort(401)
+    if request.method == "GET":
+        with db.Session(db.engine) as session:
+            stmt = db.select(db.product).where(db.product.isDeleted == False)
+            query = session.scalars(stmt).fetchall()
+        return render_template("newCategory.html", products=query, auth=getAuthFromRequest())
+    else:
+        with db.Session(db.engine) as session:
+            if "categoryId" in request.form.keys() and request.form["categoryId"].isnumeric():
+                category = session.query(db.category).where(db.category.id == int(request.form["categoryId"])).first()
+                category.name = request.form["categoryName"]
+                category.products = session.query(db.product).where(db.product.id.in_([k for k in request.form.keys() if k.isnumeric()])).all()
+            else:
+                category = db.category(request.form["categoryName"])
+                category.products = session.query(db.product).where(db.product.id.in_([k for k in request.form.keys() if k.isnumeric()])).all()
+                session.add(category)
+            session.commit()
+        return redirect(url_for("glowing-eureka.categories"))
+
+@bp.route("/categories/<id>/edit", methods=["GET"])
+def editCategory(id:int):
+    auth = getAuthFromRequest()
+    if auth is None or auth.level < 1:
+        abort(401)
+    id = int(id)
+    with db.Session(db.engine) as session:
+        stmt = db.select(db.category).where(db.category.id == id)
+        category = session.scalars(stmt).first()
+        stmt = db.select(db.product).where(db.product.isDeleted == False)
+        products = session.scalars(stmt).fetchall()
+        on = [p.id for p in category.products]
+    return render_template("newCategory.html", id=category.id, name=category.name, products=products, on=on, auth=getAuthFromRequest())
+
+@bp.route("/categories/<id>/delete", methods=["POST"])
+def deleteCategory(id:int):
+    auth = getAuthFromRequest()
+    if auth is None or auth.level < 1:
+        abort(401)
+    id = int(id)
+    with db.Session(db.engine) as session:
+        stmt = db.select(db.category).where(db.category.id == id)
+        category = session.scalars(stmt).first()
+        session.delete(category)
+        session.commit()
+    return redirect(url_for("glowing-eureka.categories"))
+
 @bp.route("/users", methods=["GET"])
 def users():
     auth = getAuthFromRequest()
-    if auth == None or auth.level < 1:
+    if auth == None or auth.level < 2:
         abort(401)
     with db.Session(db.engine) as session:
         users = session.query(db.user).all()
@@ -184,7 +234,7 @@ def users():
 @bp.route("/users/delete", methods=["POST"])
 def deleteUsers():
     auth = getAuthFromRequest()
-    if auth == None or auth.level < 1:
+    if auth == None or auth.level < 2:
         abort(401)
     id = int(request.json["id"])
     with db.Session(db.engine) as session:
@@ -198,7 +248,7 @@ def deleteUsers():
 @bp.route("/users/edit", methods=["POST"])
 def editUser():
     auth = getAuthFromRequest()
-    if auth == None or auth.level < 1:
+    if auth == None or auth.level < 2:
         abort(401)
     with db.Session(db.engine) as session:
         user = session.query(db.user).where(db.user.id == request.json["id"]).first()

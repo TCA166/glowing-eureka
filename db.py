@@ -48,6 +48,8 @@ class category(Base):
     products: Mapped[list[product]] = relationship(
         secondary=product_category, back_populates="categories"
     )
+    def __init__(self, name:str) -> None:
+        super().__init__(name=name)
 
 class user(Base):
     __tablename__ = "user"
