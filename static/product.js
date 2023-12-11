@@ -1,12 +1,14 @@
 function editBox(btn){
-    commentTextEl = document.getElementById("commentText");
+    comment = btn.parentElement;
+    btn.style.display = "none";
+    commentTextEl = comment.querySelector("#commentText");
     commentTextEl.style.display = "none";
     div = commentTextEl.parentElement;
     newInput = document.createElement("input");
     newInput.setAttribute("type", "text");
     newInput.classList.add("form-control");
     newInput.style.display = "inline-block";
-    newInput.style.width = "";
+    newInput.style.width = "fit-content";
     newInput.value = commentTextEl.innerHTML;
     newInput.addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
@@ -15,9 +17,12 @@ function editBox(btn){
             commentTextEl.style.display = "";
             newInput.remove();
             var xhttp = new XMLHttpRequest();
-            xhttp.open("POST", window.location.href + "/comment/edit", true);
+            url = new URL(window.location.href);
+            url.pathname = url.pathname + "/comment/edit";
+            xhttp.open("POST", url.href, true);
             xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            xhttp.send(JSON.stringify({"commentId":div.parentElement.id, "description":commentTextEl.innerHTML}));
+            xhttp.send(JSON.stringify({"commentId":comment.id, "description":commentTextEl.innerHTML}));
+            btn.style.display = "";
         }
     }); 
     div.insertBefore(newInput, commentTextEl.nextSibling);

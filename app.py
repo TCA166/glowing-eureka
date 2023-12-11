@@ -17,16 +17,19 @@ def getUserFromRequest() -> db.user | None:
         return None
     return usr
 
+def getPageFromRequest() -> int:
+    if "page" not in request.args:
+        return 0
+    else:
+        return int(request.args["page"])
+
 @bp.route("/")
 def home():
     return redirect(url_for("glowing-eureka.products"))
 
 @bp.route("/products/", methods=["GET"])
 def products():
-    if "page" not in request.args:
-        page = 0
-    else:
-        page = int(request.args["page"])
+    page = getPageFromRequest()
     with db.Session(db.engine) as session:
         stmt = db.select(db.product).where(db.product.isDeleted == False)
         query = session.scalars(stmt).fetchall()
@@ -64,10 +67,7 @@ def newProduct():
 def singleProduct(id:int):
     if not id.isnumeric():
         abort(400)
-    if "page" not in request.args:
-        page = 0
-    else:
-        page = int(request.args["page"])
+    page = getPageFromRequest()
     id = int(id)
     with db.Session(db.engine) as session:
         stmt = db.select(db.product).where(db.product.id == id)
@@ -136,7 +136,8 @@ def deleteComment(id:int):
             abort(401)
         comment.isDeleted = True
         session.commit()
-    return redirect(url_for("glowing-eureka.singleProduct", id=id))
+    page = getPageFromRequest()
+    return redirect(url_for("glowing-eureka.singleProduct", id=id, page=page))
 
 @bp.route("/products/<id>/comment/edit", methods=["POST"])
 def editComment(id:int):
@@ -151,7 +152,8 @@ def editComment(id:int):
             abort(401)
         comment.description = data["description"]
         session.commit()
-    return redirect(url_for("glowing-eureka.singleProduct", id=id))
+    page = getPageFromRequest()
+    return redirect(url_for("glowing-eureka.singleProduct", id=id, page=page))
 
 @bp.route("/login", methods=["GET"])
 def login():
