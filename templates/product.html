@@ -5,10 +5,17 @@
         <main>
             <div class="card">
                 {%if product.imageURL != None %}
-                <img src="{{product.imageURL}}" class="card-img-top" alt="...">
+                <img src="{{product.imageURL}}" class="card-img-top">
                 {%endif%}
                 <div class="card-body">
-                    <h3 class="card-title">{{product.title}}</h5>
+                    <h3 class="card-title">
+                        {{product.title}}
+                        <form action="{{url_for('glowing-eureka.deleteProduct', id=product.id)}}" method="POST" style="display: inline-block;">
+                            <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+                        </form>
+                        <a href="{{url_for('glowing-eureka.editProduct', id=product.id)}}" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil-square"></i></a>
+                    </h3>
+                    
                     {%if product.description != None%}
                     <p class="card-text">{{product.description}}</p>
                     {%endif%}

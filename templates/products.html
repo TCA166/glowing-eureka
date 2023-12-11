@@ -10,22 +10,25 @@
                     <img src="{{product.imageURL}}" class="card-img-top" alt="...">
                     {%endif%}
                     <div class="card-body">
-                        <a href="./{{product.id}}"><h5 class="card-title">{{product.title}}</h5></a>
+                        <a href="{{url_for('glowing-eureka.singleProduct', id=product.id)}}"><h5 class="card-title">{{product.title}}</h5></a>
                         {%if product.description != None%}
                         <p class="card-text">{{product.description}}</p>
                         {%endif%}
                     </div>
                 </div>
-                <div>
-                    {%if page > 0%}
-                    <a href=".&page={{page - 1}}/" class="btn"><i class="bi bi-arrow-bar-left"></i></a>    
-                    {%endif%}
-                    {%if next%}
-                    <a href=".&page={{page + 1}}" class="btn"><i class="bi bi-arrow-bar-right"></i></a>            
-                    {%endif%}
-                </div>
             </div>            
             {%endfor%}
+            <div>
+                
+            </div>
         </main>
     </body>
+    <footer style="display: flex; justify-content: center;">
+        {%if page > 0%}
+        <a href="{{url_for('glowing-eureka.products', page=page-1)}}" class="btn"><i class="bi bi-arrow-bar-left"></i></a>    
+        {%endif%}
+        {%if next%}
+        <a href="{{url_for('glowing-eureka.products', page=page+1)}}" class="btn"><i class="bi bi-arrow-bar-right"></i></a>            
+        {%endif%}
+    </footer>
 </html>

@@ -30,8 +30,6 @@ def products():
     with db.Session(db.engine) as session:
         stmt = db.select(db.product).where(db.product.isDeleted != True)
         query = session.scalars(stmt).fetchall()
-    if len(query) > (page + 1) * 10:
-        abort(400)
     return render_template("products.html", products=query[page * 10:(page + 1) * 10], auth=getAuthFromRequest(), page=page, next=len(query) > (page + 1) * 10)
 
 @bp.route("/products/new", methods=["GET", "POST"])
@@ -44,14 +42,28 @@ def newProduct():
     if request.method == "GET":
         return render_template("newProduct.html", auth=getAuthFromRequest())
     else:
-        with db.Session(db.engine) as session:
-            product = db.product(request.form["productName"], request.form["productDescription"], request.form["productImageUrl"])
-            session.add(product)
-            session.commit()
-        return redirect(url_for("glowing-eureka.products"))
+        if request.form["productId"] != "" and request.form["productId"].isnumeric():
+            id = int(request.form["productId"])
+            with db.Session(db.engine) as session:
+                stmt = db.select(db.product).where(db.product.id == id)
+                product = session.scalars(stmt).first()
+                product.title = request.form["productName"]
+                product.description = request.form["productDescription"]
+                if len(request.form["productImageUrl"]) > 0:
+                    product.imageURL = request.form["productImageUrl"]
+                session.commit()
+            return redirect(url_for("glowing-eureka.singleProduct", id=id))
+        else:
+            with db.Session(db.engine) as session:
+                product = db.product(request.form["productName"], request.form["productDescription"], request.form["productImageUrl"])
+                session.add(product)
+                session.commit()
+            return redirect(url_for("glowing-eureka.products"))
 
 @bp.route("/products/<id>", methods=["GET"])
 def singleProduct(id:int):
+    if not id.isnumeric():
+        abort(400)
     id = int(id)
     with db.Session(db.engine) as session:
         stmt = db.select(db.product).where(db.product.id == id)
@@ -59,6 +71,32 @@ def singleProduct(id:int):
         stmt = db.select(db.comment).where(db.comment.productId == product.id)
         comments = [r for r in session.scalars(stmt)]
     return render_template("product.html", product=product, comments=comments, auth=getAuthFromRequest(), user=getUserFromRequest())
+
+@bp.route("/products/<id>/edit", methods=["GET"])
+def editProduct(id:int):
+    auth = getAuthFromRequest()
+    if auth is None or auth.level < 1:
+        abort(401)
+    id = int(id)
+    with db.Session(db.engine) as session:
+        stmt = db.select(db.product).where(db.product.id == id)
+        product = session.scalars(stmt).first()
+    if product.imageURL is None:
+        product.imageURL = ""
+    return render_template("newProduct.html", id=product.id, name=product.title, description=product.description, url=product.imageURL, auth=getAuthFromRequest())
+
+@bp.route("/products/<id>/delete", methods=["POST"])
+def deleteProduct(id:int):
+    auth = getAuthFromRequest()
+    if auth is None or auth.level < 1:
+        abort(401)
+    id = int(id)
+    with db.Session(db.engine) as session:
+        stmt = db.select(db.product).where(db.product.id == id)
+        product = session.scalars(stmt).first()
+        product.isDeleted = True
+        session.commit()
+    return redirect(url_for("glowing-eureka.products"))
 
 @bp.route("/products/<id>/comment", methods=["POST"])
 def addComment(id:int):

@@ -33,7 +33,9 @@ class product(Base):
         secondary=product_category, back_populates="products"
     )
     comments = relationship("comment", backref=backref("product"))
-    def __init__(self, title:str, description:str, url:str, categories:list['category']=None) -> None:
+    def __init__(self, title:str, description:str, url:str=None, categories:list['category']=None) -> None:
+        if len(url) == 0:
+            url = None
         kwargs = {"title":title, "description":description, "creationDate":datetime.now(), "imageURL":url, "isDeleted":False}
         if isinstance(categories, list):
             kwargs["categories"] = categories
