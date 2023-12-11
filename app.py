@@ -28,7 +28,7 @@ def products():
     else:
         page = int(request.args["page"])
     with db.Session(db.engine) as session:
-        stmt = db.select(db.product).where(db.product.isDeleted != True)
+        stmt = db.select(db.product).where(db.product.isDeleted == False)
         query = session.scalars(stmt).fetchall()
     return render_template("products.html", products=query[page * 10:(page + 1) * 10], auth=getAuthFromRequest(), page=page, next=len(query) > (page + 1) * 10)
 
@@ -64,13 +64,17 @@ def newProduct():
 def singleProduct(id:int):
     if not id.isnumeric():
         abort(400)
+    if "page" not in request.args:
+        page = 0
+    else:
+        page = int(request.args["page"])
     id = int(id)
     with db.Session(db.engine) as session:
         stmt = db.select(db.product).where(db.product.id == id)
         product = [r for r in session.scalars(stmt)][0]
-        stmt = db.select(db.comment).where(db.comment.productId == product.id)
+        stmt = db.select(db.comment).where(db.comment.productId == product.id).where(db.comment.isDeleted == False)
         comments = [r for r in session.scalars(stmt)]
-    return render_template("product.html", product=product, comments=comments, auth=getAuthFromRequest(), user=getUserFromRequest())
+    return render_template("product.html", product=product, comments=comments[page * 5:(page + 1) * 5], page=page, next=len(comments) > (page + 1) * 5, auth=getAuthFromRequest(), user=getUserFromRequest())
 
 @bp.route("/products/<id>/edit", methods=["GET"])
 def editProduct(id:int):

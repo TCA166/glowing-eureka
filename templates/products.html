@@ -25,10 +25,10 @@
     </body>
     <footer style="display: flex; justify-content: center;">
         {%if page > 0%}
-        <a href="{{url_for('glowing-eureka.products', page=page-1)}}" class="btn"><i class="bi bi-arrow-bar-left"></i></a>    
+        <a href="{{url_for(request.endpoint, page=page-1)}}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-bar-left"></i></a>    
         {%endif%}
         {%if next%}
-        <a href="{{url_for('glowing-eureka.products', page=page+1)}}" class="btn"><i class="bi bi-arrow-bar-right"></i></a>            
+        <a href="{{url_for(request.endpoint, page=page+1)}}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-bar-right"></i></a>            
         {%endif%}
     </footer>
 </html>
