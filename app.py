@@ -155,6 +155,29 @@ def editComment(id:int):
     page = getPageFromRequest()
     return redirect(url_for("glowing-eureka.singleProduct", id=id, page=page))
 
+@bp.route("/users", methods=["GET"])
+def users():
+    auth = getAuthFromRequest()
+    if auth == None or auth.level < 1:
+        abort(401)
+    with db.Session(db.engine) as session:
+        users = session.query(db.user).all()
+    return render_template("users.html", users=users, auth=auth)
+
+@bp.route("/users/delete", methods=["POST"])
+def deleteUsers():
+    auth = getAuthFromRequest()
+    if auth == None or auth.level < 1:
+        abort(401)
+    id = int(request.json["id"])
+    with db.Session(db.engine) as session:
+        user = session.query(db.user).where(db.user.id == id).first()
+        if user.auth >= auth.level:
+            abort(403)
+        session.delete(user)
+        session.commit()
+    return redirect(url_for("glowing-eureka.users"))
+
 @bp.route("/login", methods=["GET"])
 def login():
     return render_template("login.html")

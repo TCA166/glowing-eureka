@@ -1,0 +1,35 @@
+<html>
+    {%include "head.html"%}
+    <body>
+        {%include "navbar.html"%}
+        <main>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Username</th>
+                        <th scope="col">Perms</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {%for user in users%}
+                    <tr>
+                        <th scope="row" id="id">{{user.id}}</th>
+                        <td>{{user.username}}</td>
+                        <td>
+                            {%if user.auth < auth.level%}
+                            <input type="number" value="{{user.auth}}">
+                            {%else%}
+                            {{user.auth}}
+                            {%endif%}
+                        </td>
+                        <td><button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteUser(event, this)"><i class="bi bi-trash"></i></button></td>
+                    </tr>
+                    {%endfor%}
+                </tbody>
+            </table>
+        </main>
+    </body>
+    <script src="{{url_for('static', filename='users.js')}}"></script>
+</html>

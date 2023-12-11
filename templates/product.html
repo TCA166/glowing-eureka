@@ -5,17 +5,20 @@
         <main>
             <div class="card">
                 {%if product.imageURL != None %}
-                <img src="{{product.imageURL}}" class="card-img-top">
+                <img src="{{product.imageURL}}" class="card-img-top" style="max-height: 100px;max-width: 100px;">
                 {%endif%}
                 <div class="card-body">
                     <h3 class="card-title">
                         {{product.title}}
+                        {%if auth != None%}
+                        {%if auth.level >= 1%}
                         <form action="{{url_for('glowing-eureka.deleteProduct', id=product.id)}}" method="POST" style="display: inline-block;">
                             <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
                         </form>
                         <a href="{{url_for('glowing-eureka.editProduct', id=product.id)}}" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil-square"></i></a>
+                        {%endif%}
+                        {%endif%}
                     </h3>
-                    
                     {%if product.description != None%}
                     <p class="card-text">{{product.description}}</p>
                     {%endif%}
@@ -58,8 +61,6 @@
                             </li>
                             {%endif%}
                         </ul>                        
-                        
-                        
                     </div>
                 </div>
             </div>
