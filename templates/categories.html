@@ -1,0 +1,28 @@
+<html>
+    {%include "head.html"%}
+    <body>
+        {%include "navbar.html"%}
+        <main>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Category</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {%for cat in categories%}
+                    <tr>
+                        <th scope="row" id="id">{{cat.id}}</th>
+                        <td>{{cat.name}}</td>
+                        <td>
+                            <a href="{{url_for('glowing-eureka.products', category=cat.id, search=phrase)}}" class="btn btn-outline-primary btn-sm">View</a>
+                        </td>
+                    </tr>
+                    {%endfor%}
+                </tbody>
+            </table>
+        </main>
+    </body>
+</html>

@@ -9,6 +9,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{url_for('glowing-eureka.products')}}">Products</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{url_for('glowing-eureka.categories')}}">Categories</a>
+                </li>
                 {%if auth != None%}
                     {%if auth.level >= 1%}
                     <li class="nav-item dropdown">

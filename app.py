@@ -30,11 +30,18 @@ def home():
 @bp.route("/products", methods=["GET"])
 def products():
     page = getPageFromRequest()
-    phrase = ""
+    phrase = None
+    category = None
     if "search" in request.args:
         phrase = request.args["search"]
+    if "category" in request.args:
+        category = int(request.args["category"])
     with db.Session(db.engine) as session:
-        stmt = db.select(db.product).where(db.product.isDeleted == False).where(db.product.title.like(f"%{phrase}%"))
+        stmt = db.select(db.product).where(db.product.isDeleted == False)
+        if phrase is not None:
+            stmt = stmt.where(db.product.title.like(f"%{phrase}%"))
+        if category is not None:
+            stmt = stmt.where(db.product.categories.any(db.category.id == category))
         query = session.scalars(stmt).fetchall()
     return render_template("products.html", products=query[page * 6:(page + 1) * 6], auth=getAuthFromRequest(), page=page, next=len(query) > (page + 1) * 6, phrase=phrase)
 
@@ -157,6 +164,13 @@ def editComment(id:int):
         session.commit()
     page = getPageFromRequest()
     return redirect(url_for("glowing-eureka.singleProduct", id=id, page=page))
+
+@bp.route("/categories", methods=["GET"])
+def categories():
+    with db.Session(db.engine) as session:
+        stmt = db.select(db.category)
+        query = session.scalars(stmt).fetchall()
+    return render_template("categories.html", categories=query, auth=getAuthFromRequest())
 
 @bp.route("/users", methods=["GET"])
 def users():
