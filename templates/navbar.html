@@ -11,18 +11,25 @@
                 </li>
                 {%if auth != None%}
                     {%if auth.level >= 1%}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('glowing-eureka.newProduct')}}">New Product</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('glowing-eureka.users')}}">Users</a>
-                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Admin
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="nav-link" href="{{url_for('glowing-eureka.newProduct')}}">New Product</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="nav-link" href="{{url_for('glowing-eureka.users')}}">Users</a></li>
+                        </ul>
+                    </li>              
                     {%endif%}
-                    <li class="nav-item">
-                        <a class="nav-link disabled" aria-disabled="true">Disabled</a>
-                    </li>
                 {%endif%}
             </ul>
+            <form role="search" action="{{url_for('glowing-eureka.products')}}" method="get" style="margin-bottom: 0px;margin-right:auto">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="search" placeholder="Product title" aria-describedby="button-addon2" value="{{phrase}}">
+                    <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Search</button>
+                </div>
+            </form>        
             {%if auth == None%}
             <a href="{{url_for('glowing-eureka.login')}}" class="btn btn-outline-success" type="submit">Log in</a>
             {%else%}

@@ -27,13 +27,16 @@ def getPageFromRequest() -> int:
 def home():
     return redirect(url_for("glowing-eureka.products"))
 
-@bp.route("/products/", methods=["GET"])
+@bp.route("/products", methods=["GET"])
 def products():
     page = getPageFromRequest()
+    phrase = ""
+    if "search" in request.args:
+        phrase = request.args["search"]
     with db.Session(db.engine) as session:
-        stmt = db.select(db.product).where(db.product.isDeleted == False)
+        stmt = db.select(db.product).where(db.product.isDeleted == False).where(db.product.title.like(f"%{phrase}%"))
         query = session.scalars(stmt).fetchall()
-    return render_template("products.html", products=query[page * 10:(page + 1) * 10], auth=getAuthFromRequest(), page=page, next=len(query) > (page + 1) * 10)
+    return render_template("products.html", products=query[page * 6:(page + 1) * 6], auth=getAuthFromRequest(), page=page, next=len(query) > (page + 1) * 6, phrase=phrase)
 
 @bp.route("/products/new", methods=["GET", "POST"])
 def newProduct():
@@ -175,6 +178,19 @@ def deleteUsers():
         if user.auth >= auth.level:
             abort(403)
         session.delete(user)
+        session.commit()
+    return redirect(url_for("glowing-eureka.users"))
+
+@bp.route("/users/edit", methods=["POST"])
+def editUser():
+    auth = getAuthFromRequest()
+    if auth == None or auth.level < 1:
+        abort(401)
+    with db.Session(db.engine) as session:
+        user = session.query(db.user).where(db.user.id == request.json["id"]).first()
+        if user.auth >= auth.level:
+            abort(403)
+        user.auth = request.json["level"]
         session.commit()
     return redirect(url_for("glowing-eureka.users"))
 

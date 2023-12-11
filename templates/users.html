@@ -19,12 +19,16 @@
                         <td>{{user.username}}</td>
                         <td>
                             {%if user.auth < auth.level%}
-                            <input type="number" value="{{user.auth}}">
+                            <input type="number" value="{{user.auth}}" onchange="changePerms(this)">
                             {%else%}
                             {{user.auth}}
                             {%endif%}
                         </td>
-                        <td><button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteUser(event, this)"><i class="bi bi-trash"></i></button></td>
+                        <td>
+                            {%if user.auth < auth.level%}
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteUser(this)"><i class="bi bi-trash"></i></button>
+                            {%endif%}
+                        </td>
                     </tr>
                     {%endfor%}
                 </tbody>

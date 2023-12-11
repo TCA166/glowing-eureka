@@ -2,33 +2,32 @@
     {%include "head.html"%}
     <body>
         {%include "navbar.html"%}
-        <main class="row row-cols-1 row-cols-md-3 g-4">
-            {%for product in products%}
-            <div class="col">
-                <div class="card">
-                    {%if product.imageURL != None %}
-                    <img src="{{product.imageURL}}" class="card-img-top" alt="...">
-                    {%endif%}
-                    <div class="card-body">
-                        <a href="{{url_for('glowing-eureka.singleProduct', id=product.id)}}"><h5 class="card-title">{{product.title}}</h5></a>
-                        {%if product.description != None%}
-                        <p class="card-text">{{product.description}}</p>
+        <main>
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                {%for product in products%}
+                <div class="col">
+                    <div class="card">
+                        {%if product.imageURL != None %}
+                        <img src="{{product.imageURL}}" class="card-img-top">
                         {%endif%}
+                        <div class="card-body">
+                            <a href="{{url_for('glowing-eureka.singleProduct', id=product.id)}}"><h5 class="card-title">{{product.title}}</h5></a>
+                            {%if product.description != None%}
+                            <p class="card-text">{{product.description}}</p>
+                            {%endif%}
+                        </div>
                     </div>
-                </div>
-            </div>            
-            {%endfor%}
-            <div>
-                
+                </div>            
+                {%endfor%}
+            </div>
+            <div style="display: flex; justify-content: center;margin-top:10px">
+                {%if page > 0%}
+                <a href="{{url_for(request.endpoint, page=page-1)}}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-bar-left"></i></a>    
+                {%endif%}
+                {%if next%}
+                <a href="{{url_for(request.endpoint, page=page+1)}}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-bar-right"></i></a>            
+                {%endif%}
             </div>
         </main>
     </body>
-    <footer style="display: flex; justify-content: center;">
-        {%if page > 0%}
-        <a href="{{url_for(request.endpoint, page=page-1)}}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-bar-left"></i></a>    
-        {%endif%}
-        {%if next%}
-        <a href="{{url_for(request.endpoint, page=page+1)}}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-bar-right"></i></a>            
-        {%endif%}
-    </footer>
 </html>
