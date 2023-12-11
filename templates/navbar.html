@@ -30,12 +30,23 @@
                     {%endif%}
                 {%endif%}
             </ul>
+            {%if categories is defined%}
             <form role="search" action="{{url_for('glowing-eureka.products')}}" method="get" style="margin-bottom: 0px;margin-right:auto">
                 <div class="input-group">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Categories</button>
+                    <div class="dropdown-menu">
+                        {%for cat in categories%}
+                        <div class="form-check">
+                            <input type="checkbox" value="{{cat.id}}" name="category" {{"checked" if cat.id in on}}>
+                            <label class="form-check-label">{{cat.name}}</label>
+                        </div>
+                        {%endfor%}
+                    </div>
                     <input type="text" class="form-control" name="search" placeholder="Product title" aria-describedby="button-addon2" value="{{phrase}}">
                     <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Search</button>
                 </div>
-            </form>        
+            </form>   
+            {%endif%}     
             {%if auth == None%}
             <a href="{{url_for('glowing-eureka.login')}}" class="btn btn-outline-success" type="submit">Log in</a>
             {%else%}

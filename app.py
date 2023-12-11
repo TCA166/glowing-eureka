@@ -30,20 +30,21 @@ def home():
 @bp.route("/products", methods=["GET"])
 def products():
     page = getPageFromRequest()
-    phrase = None
-    category = None
+    phrase = ""
+    category = []
     if "search" in request.args:
         phrase = request.args["search"]
     if "category" in request.args:
-        category = int(request.args["category"])
+        category = [int(c) for c in request.args.getlist("category")]
     with db.Session(db.engine) as session:
         stmt = db.select(db.product).where(db.product.isDeleted == False)
-        if phrase is not None:
+        if phrase != "":
             stmt = stmt.where(db.product.title.like(f"%{phrase}%"))
-        if category is not None:
-            stmt = stmt.where(db.product.categories.any(db.category.id == category))
+        if category != []:
+            stmt = stmt.where(db.product.categories.any(db.category.id.in_(category)))
         query = session.scalars(stmt).fetchall()
-    return render_template("products.html", products=query[page * 6:(page + 1) * 6], auth=getAuthFromRequest(), page=page, next=len(query) > (page + 1) * 6, phrase=phrase)
+        categories = session.query(db.category).all()
+    return render_template("products.html", products=query[page * 6:(page + 1) * 6], auth=getAuthFromRequest(), page=page, categories=categories, on=category, next=len(query) > (page + 1) * 6, phrase=phrase)
 
 @bp.route("/products/new", methods=["GET", "POST"])
 def newProduct():
